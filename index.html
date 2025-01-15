@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reaction Time Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, #4CAF50, #2196F3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: titleGlow 2s ease-in-out infinite alternate;
+        }
+
+        .game-area {
+            width: 100%;
+            height: 300px;
+            border-radius: 1rem;
+            margin: 2rem 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .waiting {
+            background: #2c2c44;
+            animation: pulse 2s infinite;
+        }
+
+        .ready {
+            background: #e74c3c;
+        }
+
+        .click {
+            background: #27ae60;
+        }
+
+        .result {
+            font-size: 2rem;
+            margin: 2rem 0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .instructions {
+            color: #a0a0a0;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .credits {
+            margin-top: 2rem;
+            font-size: 1rem;
+            color: #a0a0a0;
+            background: linear-gradient(45deg, #4CAF50, #2196F3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeIn 0.5s ease-out;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes titleGlow {
+            from { filter: drop-shadow(0 0 2px rgba(76, 175, 80, 0.5)); }
+            to { filter: drop-shadow(0 0 10px rgba(33, 150, 243, 0.5)); }
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #2196F3);
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            min-width: 150px;
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Reaction Time Test</h1>
+        <p class="instructions">Wait for the red color, then click as quickly as possible when you see green!</p>
+        <div id="gameArea" class="game-area waiting">
+        </div>
+        <div id="result" class="result" style="display: none;"></div>
+        <div class="stats">
+            <div class="stat-box">
+                Best Time: <span id="bestTime">-</span>
+            </div>
+            <div class="stat-box">
+                Average Time: <span id="avgTime">-</span>
+            </div>
+        </div>
+        <button class="btn" onclick="startGame()">Start Test</button>
+        <div class="credits">Developed by MDRHL1.0</div>
+    </div>
+
+    <script>
+        let timeoutId;
+        let startTime;
+        let bestTime = Infinity;
+        let times = [];
+        const gameArea = document.getElementById('gameArea');
+        const resultDiv = document.getElementById('result');
+        const bestTimeSpan = document.getElementById('bestTime');
+        const avgTimeSpan = document.getElementById('avgTime');
+        let gameState = 'waiting';
+
+        function startGame() {
+            if (gameState !== 'waiting') return;
+            
+            gameArea.className = 'game-area waiting';
+            resultDiv.style.display = 'none';
+            gameState = 'preparing';
+            
+            // Random delay between 1-5 seconds
+            const delay = Math.random() * 4000 + 1000;
+            
+            timeoutId = setTimeout(() => {
+                gameArea.className = 'game-area click';
+                startTime = Date.now();
+                gameState = 'clicking';
+            }, delay);
+
+            // Change to red after a short delay
+            setTimeout(() => {
+                gameArea.className = 'game-area ready';
+            }, 500);
+        }
+
+        function getReactionMessage(time) {
+            if (time < 180) return "Impressive reaction time! 🏆";
+            if (time < 250) return "Good reaction time! 👍";
+            if (time < 350) return "Average reaction time 👌";
+            return "Slow reaction time 🐌";
+        }
+
+        gameArea.addEventListener('click', () => {
+            if (gameState === 'preparing') {
+                // Clicked too early
+                clearTimeout(timeoutId);
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = "Too early! Try again 😅";
+                gameArea.className = 'game-area waiting';
+                gameState = 'waiting';
+            } else if (gameState === 'clicking') {
+                // Valid click
+                const reactionTime = Date.now() - startTime;
+                times.push(reactionTime);
+                if (reactionTime < bestTime) {
+                    bestTime = reactionTime;
+                    bestTimeSpan.textContent = `${bestTime}ms`;
+                }
+                
+                // Calculate average of last 5 attempts
+                if (times.length > 0) {
+                    const recent = times.slice(-5);
+                    const avg = Math.round(recent.reduce((a, b) => a + b) / recent.length);
+                    avgTimeSpan.textContent = `${avg}ms`;
+                }
+
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = `${reactionTime}ms - ${getReactionMessage(reactionTime)}`;
+                gameArea.className = 'game-area waiting';
+                gameState = 'waiting';
+            }
+        });
+    </script>
+</body>
+</html>
